@@ -20,21 +20,27 @@ s consists of parentheses only '()[]{}'.
 class Solution {
     public boolean isValid(String s) {
         Stack<Character> stack = new Stack<>();
-        Map<Character, Character> map = Map.of(
-            ')', '(',
-            '}', '{',
-            ']', '['
-        );
         
         for (char c : s.toCharArray()) {
-            if (map.containsValue(c)) { // Opening brackets
+            
+            if (c == '(' || c == '{' || c == '[') {
                 stack.push(c);
-            } else if (map.containsKey(c)) { // Closing brackets
-                if (stack.isEmpty() || stack.pop() != map.get(c)) {
-                    return false;
+            }
+           
+            else if (c == ')' || c == '}' || c == ']') {
+                if (stack.isEmpty()) {
+                    return false; 
+                }
+                char top = stack.pop();
+                if ((c == ')' && top != '(') ||
+                    (c == '}' && top != '{') ||
+                    (c == ']' && top != '[')) {
+                    return false; 
                 }
             }
         }
+        
+       
         return stack.isEmpty();
     }
 }
