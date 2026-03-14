@@ -1,0 +1,41 @@
+https://leetcode.com/problems/subsets-ii/description/
+Given an integer array nums that may contain duplicates, return all possible subsets (the power set).
+The solution set must not contain duplicate subsets. Return the solution in any order.
+
+Example 1:
+Input: nums = [1,2,2]
+Output: [[],[1],[1,2],[1,2,2],[2],[2,2]]
+
+Example 2:
+Input: nums = [0]
+Output: [[],[0]]
+
+Constraints:
+1 <= nums.length <= 10
+-10 <= nums[i] <= 10
+===================================================================================================================
+Time Complexity: O(n · 2ⁿ)
+Space Complexity: O(n · 2ⁿ)
+
+class Solution {
+    public List<List<Integer>> subsetsWithDup(int[] nums) {
+        Arrays.sort(nums);
+        List<List<Integer>> ans = new ArrayList<>();
+        dfs(0, nums, new ArrayList<>(), ans);
+        return ans;
+    }
+
+    void dfs(int idx, int[] nums, List<Integer>curr, List<List<Integer>>ans){
+        //add each possinle subset to answer
+        ans.add(new ArrayList<>(curr));
+
+        //find subset from each index of nums
+        for(int i = idx; i < nums.length; i++){
+            if(i > idx && nums[i] == nums[i - 1])
+                continue;                   //skip duplicates
+            curr.add(nums[i]);              //choose
+            dfs(i + 1, nums, curr, ans);    //next index
+            curr.remove(curr.size() - 1);   //unchoose
+        }
+    }
+}
