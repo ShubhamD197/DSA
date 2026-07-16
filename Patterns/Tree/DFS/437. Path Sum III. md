@@ -1,0 +1,587 @@
+# 437. Path Sum III
+
+**Difficulty:** Medium
+
+---
+
+# Problem Statement
+
+Given the `root` of a binary tree and an integer `targetSum`, return the **number of paths** where the sum of the values along the path equals `targetSum`.
+
+### Important
+
+- The path **does not need to start at the root**.
+- The path **does not need to end at a leaf**.
+- The path **must move downward** (parent → child).
+
+Return the total number of such paths.
+
+---
+
+# Example 1
+
+```text
+Input
+
+targetSum = 8
+
+          10
+         /  \
+        5   -3
+       / \    \
+      3   2    11
+     / \   \
+    3  -2   1
+
+Output
+
+3
+```
+
+Valid Paths
+
+```text
+5 → 3
+
+5 → 2 → 1
+
+-3 → 11
+```
+
+---
+
+# Example 2
+
+```text
+Input
+
+targetSum = 22
+
+              5
+            /   \
+           4     8
+          /     / \
+         11    13  4
+        /  \      / \
+       7    2    5   1
+
+Output
+
+3
+```
+
+Valid Paths
+
+```text
+5 → 4 → 11 → 2
+
+4 → 11 → 7
+
+8 → 4 → 5
+```
+
+---
+
+# Approach 1 : Brute Force DFS
+
+## Idea
+
+Treat every node as the **starting point**.
+
+For each node:
+
+- Count all downward paths starting from that node.
+- Recursively repeat for the left and right children.
+
+---
+
+## Algorithm
+
+For every node:
+
+1. Count paths starting from that node.
+2. Count paths starting from the left subtree.
+3. Count paths starting from the right subtree.
+
+---
+
+## Java Code
+
+```java
+class Solution {
+
+    public int pathSum(TreeNode root, int targetSum) {
+
+        if (root == null)
+            return 0;
+
+        return countPaths(root, targetSum)
+                + pathSum(root.left, targetSum)
+                + pathSum(root.right, targetSum);
+    }
+
+    private int countPaths(TreeNode node, long target) {
+
+        if (node == null)
+            return 0;
+
+        int count = 0;
+
+        if (node.val == target)
+            count++;
+
+        count += countPaths(node.left, target - node.val);
+        count += countPaths(node.right, target - node.val);
+
+        return count;
+    }
+}
+```
+
+---
+
+## Dry Run
+
+Tree
+
+```text
+          10
+         /  \
+        5   -3
+       / \    \
+      3   2    11
+     / \   \
+    3  -2   1
+```
+
+Target
+
+```text
+8
+```
+
+Start from
+
+```text
+10
+```
+
+No valid path.
+
+---
+
+Start from
+
+```text
+5
+```
+
+```
+5 → 3 = 8
+```
+
+Count = 1
+
+---
+
+Continue
+
+```
+5 → 2 → 1 = 8
+```
+
+Count = 2
+
+---
+
+Start from
+
+```text
+-3
+```
+
+```
+-3 → 11 = 8
+```
+
+Count = 3
+
+Return
+
+```text
+3
+```
+
+---
+
+## Complexity
+
+- Time : **O(n²)**
+
+Worst case (skewed tree)
+
+- Space : **O(h)**
+
+---
+
+# Approach 2 : Prefix Sum + HashMap (Optimal)
+
+## Idea
+
+This approach is similar to **Subarray Sum Equals K (LeetCode 560)**.
+
+Maintain a **running prefix sum** from the root to the current node.
+
+At each node:
+
+```text
+currentSum = sum from root to current node
+```
+
+If
+
+```text
+currentSum - targetSum
+```
+
+has appeared before,
+
+then there exists a path whose sum equals `targetSum`.
+
+Use a `HashMap` to store the frequency of prefix sums.
+
+---
+
+## Why does this work?
+
+Suppose
+
+```text
+Current Prefix Sum = 21
+
+Target = 8
+```
+
+Compute
+
+```text
+21 - 8 = 13
+```
+
+If prefix sum `13` has already occurred,
+
+then the path between those two points sums to `8`.
+
+---
+
+## Algorithm
+
+1. Store
+
+```text
+0 → 1
+```
+
+in the map.
+
+2. Perform DFS.
+
+3. Update
+
+```text
+currentSum += node.val
+```
+
+4. Count
+
+```text
+map[currentSum - targetSum]
+```
+
+5. Store current prefix sum.
+
+6. Traverse left and right.
+
+7. Backtrack by removing the current prefix sum.
+
+---
+
+## Java Code
+
+```java
+import java.util.*;
+
+class Solution {
+
+    HashMap<Long, Integer> map = new HashMap<>();
+    int count = 0;
+
+    public int pathSum(TreeNode root, int targetSum) {
+
+        map.put(0L, 1);
+
+        dfs(root, 0L, targetSum);
+
+        return count;
+    }
+
+    private void dfs(TreeNode node, long currentSum, int targetSum) {
+
+        if (node == null)
+            return;
+
+        currentSum += node.val;
+
+        count += map.getOrDefault(currentSum - targetSum, 0);
+
+        map.put(currentSum,
+                map.getOrDefault(currentSum, 0) + 1);
+
+        dfs(node.left, currentSum, targetSum);
+        dfs(node.right, currentSum, targetSum);
+
+        map.put(currentSum, map.get(currentSum) - 1);
+    }
+}
+```
+
+---
+
+## Dry Run
+
+Tree
+
+```text
+          10
+         /  \
+        5   -3
+       / \    \
+      3   2    11
+```
+
+Target
+
+```text
+8
+```
+
+Initially
+
+```text
+Map
+
+0 → 1
+```
+
+---
+
+Visit
+
+```text
+10
+```
+
+Prefix
+
+```text
+10
+```
+
+Need
+
+```text
+10 - 8 = 2
+```
+
+Not found.
+
+Store
+
+```text
+10
+```
+
+---
+
+Visit
+
+```text
+5
+```
+
+Prefix
+
+```text
+15
+```
+
+Need
+
+```text
+15 - 8 = 7
+```
+
+Not found.
+
+Store
+
+```text
+15
+```
+
+---
+
+Visit
+
+```text
+3
+```
+
+Prefix
+
+```text
+18
+```
+
+Need
+
+```text
+18 - 8 = 10
+```
+
+Found!
+
+One path
+
+```text
+5 → 3
+```
+
+Count = 1
+
+Continue similarly to find
+
+```text
+5 → 2 → 1
+
+-3 → 11
+```
+
+Final Answer
+
+```text
+3
+```
+
+---
+
+## Why do we backtrack?
+
+Suppose
+
+```text
+      1
+     / \
+    2   3
+```
+
+After finishing the left subtree,
+
+the prefix sums from that path **must not** be used while exploring the right subtree.
+
+Therefore,
+
+after returning from recursion,
+
+remove the current prefix sum.
+
+```java
+map.put(currentSum, map.get(currentSum) - 1);
+```
+
+This keeps the map valid for the current root-to-node path only.
+
+---
+
+## Complexity
+
+- Time : **O(n)**
+- Space : **O(n)**
+
+---
+
+# Visualization
+
+```text
+          10
+         /  \
+        5   -3
+       / \    \
+      3   2    11
+     / \   \
+    3  -2   1
+```
+
+Valid Paths
+
+```text
+5 → 3
+
+↓
+
+Sum = 8
+
+----------------
+
+5 → 2 → 1
+
+↓
+
+Sum = 8
+
+----------------
+
+-3 → 11
+
+↓
+
+Sum = 8
+```
+
+Answer
+
+```text
+3
+```
+
+---
+
+# Comparison
+
+| Approach | Time | Space |
+|----------|------|-------|
+| Brute Force DFS | O(n²) | O(h) |
+| Prefix Sum + HashMap | O(n) | O(n) |
+
+---
+
+# Difference Between LeetCode 112 and 437
+
+| 112. Path Sum | 437. Path Sum III |
+|---------------|-------------------|
+| Return **true/false** | Return **count of paths** |
+| Path must start at the **root** | Path can start **anywhere** |
+| Path must end at a **leaf** | Path can end at **any node** |
+| Root → Leaf only | Any downward path |
+| DFS is sufficient | Prefix Sum + HashMap is the optimal solution |
+
+---
+
+# Key Interview Points
+
+- Paths can start at **any node**, but they must always move **downward**.
+- The brute-force approach starts a DFS from every node, resulting in **O(n²)** time in the worst case.
+- The optimal solution uses **Prefix Sum + HashMap**, similar to **LeetCode 560 (Subarray Sum Equals K)**.
+- Store the frequency of prefix sums and use `currentSum - targetSum` to count valid paths.
+- Always **backtrack** by removing the current prefix sum before returning to the parent.
+- Use **`long`** for prefix sums to avoid integer overflow.
